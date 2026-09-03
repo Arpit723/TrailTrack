@@ -25,7 +25,7 @@ struct TrailTrackApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TrackingView()
         }
         .modelContainer(sharedModelContainer)
     }
