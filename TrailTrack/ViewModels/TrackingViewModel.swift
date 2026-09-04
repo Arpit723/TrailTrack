@@ -8,6 +8,7 @@
 import CoreLocation
 import Foundation
 import Observation
+import SwiftData
 
 @MainActor
 @Observable
@@ -20,6 +21,10 @@ final class TrackingViewModel {
 
     private var sessionStartDate: Date?
     private var ticker: Task<Void, Never>?
+
+    /// Injected from the view's `.modelContext` environment so completed
+    /// sessions can be persisted to SwiftData.
+    var modelContext: ModelContext?
 
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
@@ -91,6 +96,25 @@ final class TrackingViewModel {
         ticker = nil
         locationManager.stopTracking()
         isTracking = false
+        saveCompletedSession()
+    }
+
+    private func saveCompletedSession() {
+        guard let modelContext, let sessionStartDate else { return }
+        let session = TrackedSession(
+            startDate: sessionStartDate,
+            endDate: Date(),
+            distanceMeters: distanceMeters,
+            routePoints: locationManager.routePoints.map {
+                RoutePoint(latitude: $0.latitude, longitude: $0.longitude)
+            }
+        )
+        modelContext.insert(session)
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save tracked session: \(error.localizedDescription)")
+        }
     }
 
     func requestLocationAuthorization() {

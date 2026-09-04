@@ -35,6 +35,10 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     }
 
     func startTracking() {
+        // Each tracking session is a fresh recording: drop any points left
+        // over from a previous session.
+        routePoints = []
+
         switch authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()

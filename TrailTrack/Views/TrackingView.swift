@@ -10,6 +10,7 @@ import SwiftUI
 
 @MainActor
 struct TrackingView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var viewModel = TrackingViewModel(locationManager: LocationManager())
     @State private var cameraPosition: MapCameraPosition = .userLocation(
         followsHeading: true,
@@ -26,7 +27,10 @@ struct TrackingView: View {
             }
             .padding(16)
         }
-        .task { viewModel.requestLocationAuthorization() }
+        .task {
+            viewModel.modelContext = modelContext
+            viewModel.requestLocationAuthorization()
+        }
     }
 
     // MARK: - Map
