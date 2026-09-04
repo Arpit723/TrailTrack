@@ -12,5 +12,7 @@
 	<array>
 		<string>location</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>
