@@ -18,18 +18,31 @@ struct TrackingView: View {
     )
 
     var body: some View {
-        ZStack {
-            mapLayer
-            VStack(spacing: 8) {
-                statsCard
-                Spacer()
-                startStopButton
+        NavigationStack {
+            ZStack {
+                mapLayer
+                VStack(spacing: 8) {
+                    statsCard
+                    Spacer()
+                    startStopButton
+                }
+                .padding(16)
             }
-            .padding(16)
-        }
-        .task {
-            viewModel.modelContext = modelContext
-            viewModel.requestLocationAuthorization()
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        HistoryView()
+                    } label: {
+                        Label("History", systemImage: "clock.fill")
+                            .labelStyle(.titleAndIcon)
+                    }
+                }
+            }
+            .task {
+                viewModel.modelContext = modelContext
+                viewModel.requestLocationAuthorization()
+            }
+            .navigationTitle("TrailTrack").navigationBarTitleDisplayMode(.inline)
         }
     }
 
