@@ -25,6 +25,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     private(set) var isTracking = false
     private(set) var routePoints: [CLLocationCoordinate2D] = []
+    private(set) var lastLocationDate: Date?
 
     private let manager = CLLocationManager()
 
@@ -32,7 +33,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.distanceFilter = 0.5
+        manager.distanceFilter = 10
     }
 
     /// Call once at app launch to show the initial When-In-Use permission prompt.
@@ -45,6 +46,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         // over from a previous session.
         let leftoverCount = routePoints.count
         routePoints = []
+        lastLocationDate = nil
         if leftoverCount > 0 {
             Self.logger.info("New session: dropped \(leftoverCount) leftover route point(s)")
         }
@@ -92,6 +94,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in
             guard self.isTracking else { return }
             self.routePoints.append(contentsOf: locations.map(\.coordinate))
+            self.lastLocationDate = Date()
             Self.logger.debug("Recorded \(locations.count) location(s); route total: \(self.routePoints.count)")
         }
     }

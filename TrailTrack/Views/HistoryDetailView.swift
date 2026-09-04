@@ -31,6 +31,7 @@ struct HistoryDetailView: View {
         }
         .navigationTitle(Text(session.startDate, format: .dateTime.day().month().hour().minute()))
         .navigationBarTitleDisplayMode(.inline)
+        .backArrowOnly()
     }
 
     // MARK: - Map (static route)
@@ -89,25 +90,12 @@ struct HistoryDetailView: View {
 
     private var statsCard: some View {
         HStack(spacing: 8) {
-            StatCard(title: "Distance", value: distanceText)
+            StatCard(title: "Distance", value: session.formattedDistance)
             StatCard(title: "Duration", value: session.formattedDuration)
-            StatCard(title: "Pace", value: paceText)
+            StatCard(title: "Pace", value: session.formattedPace)
         }
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    private var distanceText: String {
-        (session.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
-    }
-
-    private var paceText: String {
-        let kilometers = session.distanceMeters / 1000
-        guard kilometers >= 0.01 else { return "--:--" }
-        let paceMinutes = (session.duration / 60) / kilometers
-        let minutes = Int(paceMinutes)
-        let seconds = Int((paceMinutes - Double(minutes)) * 60)
-        return String(format: "%d:%02d /km", minutes, seconds)
     }
 }
 

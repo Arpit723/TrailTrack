@@ -11,6 +11,7 @@ import SwiftUI
 @MainActor
 struct TrackingView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
     @State private var viewModel = TrackingViewModel(locationManager: LocationManager())
     @State private var cameraPosition: MapCameraPosition = .userLocation(
         followsHeading: true,
@@ -19,14 +20,23 @@ struct TrackingView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                mapLayer
-                VStack(spacing: 8) {
-                    statsCard
-                    Spacer()
-                    startStopButton
+            Group {
+                if viewModel.isLocationPermissionDenied {
+                    permissionDeniedView
+                } else {
+                    ZStack {
+                        mapLayer
+                        VStack(spacing: 8) {
+                            statsCard
+                            if viewModel.isWaitingForSignal {
+                                waitingForSignalChip
+                            }
+                            Spacer()
+                            startStopButton
+                        }
+                        .padding(16)
+                    }
                 }
-                .padding(16)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -44,6 +54,43 @@ struct TrackingView: View {
             }
             .navigationTitle("TrailTrack").navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    // MARK: - Permission denied
+
+    private var permissionDeniedView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "location.slash")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 8)
+            Text("Location Access Needed")
+                .font(.headline)
+            Text("TrailTrack needs location access to record your walks and runs. Enable it in Settings to start tracking.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(settingsURL)
+                }
+            } label: {
+                Label("Open Settings", systemImage: "gearshape.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.top, 8)
+        }
+        .padding(16)
+    }
+
+    // MARK: - GPS signal
+
+    private var waitingForSignalChip: some View {
+        Label("Waiting for GPS signal…", systemImage: "antenna.radiowaves.left.and.slash")
+            .font(.caption)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.thinMaterial, in: Capsule())
     }
 
     // MARK: - Map

@@ -42,6 +42,18 @@ final class TrackedSession {
     }
 
     var formattedDuration: String {
+        Self.formatDuration(duration)
+    }
+
+    var formattedDistance: String {
+        (distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
+    }
+
+    var formattedPace: String {
+        Self.formatPace(elapsedSeconds: duration, distanceMeters: distanceMeters)
+    }
+
+    static func formatDuration(_ duration: TimeInterval) -> String {
         let total = Int(duration)
         let hours = total / 3600
         let minutes = (total % 3600) / 60
@@ -50,5 +62,14 @@ final class TrackedSession {
             return String(format: "%d:%02d:%02d", hours, minutes, seconds)
         }
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    static func formatPace(elapsedSeconds: TimeInterval, distanceMeters: Double) -> String {
+        let kilometers = distanceMeters / 1000
+        guard kilometers >= 0.01, elapsedSeconds > 0 else { return "--:--" }
+        let paceMinutes = (elapsedSeconds / 60) / kilometers
+        let minutes = Int(paceMinutes)
+        let seconds = Int((paceMinutes - Double(minutes)) * 60)
+        return String(format: "%d:%02d /km", minutes, seconds)
     }
 }

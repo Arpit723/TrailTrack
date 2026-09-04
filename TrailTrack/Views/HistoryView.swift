@@ -47,6 +47,7 @@ struct HistoryView: View {
             }
         }
         .navigationTitle("History")
+        .backArrowOnly()
         .alert(
             "Should I delete the session?",
             isPresented: deleteConfirmationShown,
@@ -74,17 +75,13 @@ private struct SessionRow: View {
             Text(session.startDate, format: .dateTime.day().month().year().hour().minute())
                 .font(.headline)
             HStack(spacing: 8) {
-                Text(distanceText)
+                Text(session.formattedDistance)
                 Text(session.formattedDuration)
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
-    }
-
-    private var distanceText: String {
-        (session.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
     }
 }
 

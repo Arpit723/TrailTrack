@@ -66,23 +66,28 @@ final class TrackingViewModel {
     }
 
     var elapsedTime: String {
-        let total = Int(elapsedSeconds)
-        let hours = total / 3600
-        let minutes = (total % 3600) / 60
-        let seconds = total % 60
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
-        }
-        return String(format: "%02d:%02d", minutes, seconds)
+        TrackedSession.formatDuration(elapsedSeconds)
     }
 
     var currentPace: String {
-        let kilometers = distanceMeters / 1000
-        guard kilometers >= 0.01, elapsedSeconds > 0 else { return "--:--" }
-        let paceMinutes = (elapsedSeconds / 60) / kilometers
-        let minutes = Int(paceMinutes)
-        let seconds = Int((paceMinutes - Double(minutes)) * 60)
-        return String(format: "%d:%02d /km", minutes, seconds)
+        TrackedSession.formatPace(elapsedSeconds: elapsedSeconds, distanceMeters: distanceMeters)
+    }
+
+    var isLocationPermissionDenied: Bool {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// True while a session is active but no GPS fixes have arrived recently
+    /// (or at all yet). Stats keep their last known values meanwhile.
+    var isWaitingForSignal: Bool {
+        guard isTracking else { return false }
+        guard let lastLocationDate = locationManager.lastLocationDate else { return true }
+        return Date().timeIntervalSince(lastLocationDate) > 10
     }
 
     // MARK: - Session control
