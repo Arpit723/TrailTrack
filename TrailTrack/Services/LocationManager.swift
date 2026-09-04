@@ -32,7 +32,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.distanceFilter = 10
+        manager.distanceFilter = 0.5
     }
 
     /// Call once at app launch to show the initial When-In-Use permission prompt.
@@ -85,6 +85,10 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        // Temporary debug logging — remove after verifying delegate firing rate.
+        for location in locations {
+            print("DEBUG didUpdateLocations: \(location.coordinate.latitude), \(location.coordinate.longitude) @ \(location.timestamp.formatted(.iso8601))")
+        }
         Task { @MainActor in
             guard self.isTracking else { return }
             self.routePoints.append(contentsOf: locations.map(\.coordinate))

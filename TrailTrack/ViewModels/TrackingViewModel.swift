@@ -125,8 +125,10 @@ final class TrackingViewModel {
         modelContext.insert(session)
         do {
             try modelContext.save()
+            print("DEBUG: SwiftData save SUCCEEDED — id: \(session.id.uuidString), points: \(session.routePoints.count), distance: \(session.distanceMeters) m")
             Self.logger.notice("Saved TrackedSession — id: \(session.id.uuidString, privacy: .public), start: \(session.startDate.formatted(.iso8601), privacy: .public), end: \(session.endDate.formatted(.iso8601), privacy: .public), points: \(session.routePoints.count), distance: \(session.distanceMeters, format: .fixed(precision: 1)) m, duration: \(session.endDate.timeIntervalSince(session.startDate), format: .fixed(precision: 1)) s")
         } catch {
+            print("DEBUG: SwiftData save FAILED — \(error)")
             Self.logger.error("Failed to save tracked session: \(error.localizedDescription, privacy: .public)")
         }
     }
