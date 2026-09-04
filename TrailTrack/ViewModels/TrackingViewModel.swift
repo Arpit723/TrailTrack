@@ -9,10 +9,16 @@ import CoreLocation
 import Foundation
 import Observation
 import SwiftData
+import os
 
 @MainActor
 @Observable
 final class TrackingViewModel {
+
+    private static let logger = Logger(
+        subsystem: "com.bk.trailtrack.TrailTrack",
+        category: "TrackingViewModel"
+    )
 
     private let locationManager: LocationManager
 
@@ -83,11 +89,13 @@ final class TrackingViewModel {
 
     func startTracking() {
         guard !isTracking else { return }
-        sessionStartDate = Date()
+        let now = Date()
+        sessionStartDate = now
         elapsedSeconds = 0
         locationManager.startTracking()
         isTracking = true
         startTicker()
+        Self.logger.info("Tracking session started at \(now.formatted(.iso8601), privacy: .public)")
     }
 
     func stopTracking() {
@@ -96,11 +104,16 @@ final class TrackingViewModel {
         ticker = nil
         locationManager.stopTracking()
         isTracking = false
+        Self.logger.info("Tracking session stopped")
         saveCompletedSession()
     }
 
     private func saveCompletedSession() {
-        guard let modelContext, let sessionStartDate else { return }
+        guard let modelContext else {
+            Self.logger.error("No modelContext injected — completed session was NOT saved")
+            return
+        }
+        guard let sessionStartDate else { return }
         let session = TrackedSession(
             startDate: sessionStartDate,
             endDate: Date(),
@@ -112,8 +125,9 @@ final class TrackingViewModel {
         modelContext.insert(session)
         do {
             try modelContext.save()
+            Self.logger.notice("Saved TrackedSession — id: \(session.id.uuidString, privacy: .public), start: \(session.startDate.formatted(.iso8601), privacy: .public), end: \(session.endDate.formatted(.iso8601), privacy: .public), points: \(session.routePoints.count), distance: \(session.distanceMeters, format: .fixed(precision: 1)) m, duration: \(session.endDate.timeIntervalSince(session.startDate), format: .fixed(precision: 1)) s")
         } catch {
-            print("Failed to save tracked session: \(error.localizedDescription)")
+            Self.logger.error("Failed to save tracked session: \(error.localizedDescription, privacy: .public)")
         }
     }
 

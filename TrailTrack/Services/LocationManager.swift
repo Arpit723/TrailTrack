@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Observation
+import os
 
 /// Wraps CLLocationManager for recording a walk/run route.
 ///
@@ -15,6 +16,11 @@ import Observation
 @MainActor
 @Observable
 final class LocationManager: NSObject, CLLocationManagerDelegate {
+
+    private static let logger = Logger(
+        subsystem: "com.bk.trailtrack.TrailTrack",
+        category: "LocationManager"
+    )
 
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     private(set) var isTracking = false
@@ -37,7 +43,11 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     func startTracking() {
         // Each tracking session is a fresh recording: drop any points left
         // over from a previous session.
+        let leftoverCount = routePoints.count
         routePoints = []
+        if leftoverCount > 0 {
+            Self.logger.info("New session: dropped \(leftoverCount) leftover route point(s)")
+        }
 
         switch authorizationStatus {
         case .notDetermined:
@@ -55,12 +65,14 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.pausesLocationUpdatesAutomatically = false
         manager.startUpdatingLocation()
         isTracking = true
+        Self.logger.info("Location updates started")
     }
 
     func stopTracking() {
         manager.allowsBackgroundLocationUpdates = false
         manager.stopUpdatingLocation()
         isTracking = false
+        Self.logger.info("Location updates stopped — route contains \(self.routePoints.count) point(s)")
     }
 
     // MARK: - CLLocationManagerDelegate
@@ -68,6 +80,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
             self.authorizationStatus = manager.authorizationStatus
+            Self.logger.log("Authorization status: \(String(describing: manager.authorizationStatus), privacy: .public)")
         }
     }
 
@@ -75,12 +88,13 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in
             guard self.isTracking else { return }
             self.routePoints.append(contentsOf: locations.map(\.coordinate))
+            Self.logger.debug("Recorded \(locations.count) location(s); route total: \(self.routePoints.count)")
         }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
-            print("LocationManager error: \(error.localizedDescription)")
+            Self.logger.error("Location update failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
