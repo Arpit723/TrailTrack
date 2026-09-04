@@ -36,6 +36,16 @@ struct TrackingView: View {
                         }
                         .padding(16)
                     }
+                    .onChange(of: viewModel.routePoints.count) { _, _ in
+                        guard viewModel.isTracking, let newCoordinate = viewModel.latestCoordinate else { return }
+                        cameraPosition = .region(
+                            MKCoordinateRegion(
+                                center: newCoordinate,
+                                latitudinalMeters: 500,
+                                longitudinalMeters: 500
+                            )
+                        )
+                    }
                 }
             }
             .toolbar {

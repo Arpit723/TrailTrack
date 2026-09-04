@@ -42,6 +42,11 @@ final class TrackingViewModel {
         locationManager.routePoints
     }
 
+    /// The most recent recorded coordinate, if any.
+    var latestCoordinate: CLLocationCoordinate2D? {
+        locationManager.routePoints.last
+    }
+
     // MARK: - Live stats
 
     /// Cumulative distance along the recorded route, summed between
